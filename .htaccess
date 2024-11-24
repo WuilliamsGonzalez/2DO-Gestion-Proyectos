@@ -1,0 +1,41 @@
+# 1. Forzar redireccionamiento a HTTPS para todas las solicitudes
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 2. Deshabilitar la visualización de directorios
+Options -Indexes
+
+# 3. Configuración de cabeceras de seguridad
+<IfModule mod_headers.c>
+    # Proteger contra ataques de clickjacking
+    Header always append X-Frame-Options "SAMEORIGIN"
+
+    # Habilitar protección contra ataques de XSS (Cross-Site Scripting)
+    Header set X-XSS-Protection "1; mode=block"
+
+    # Evitar que el navegador intente adivinar el tipo de contenido
+    Header set X-Content-Type-Options "nosniff"
+
+    # Establecer Content Security Policy (personaliza esta política según tus necesidades)
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self'; img-src 'self'; style-src 'self'; frame-ancestors 'self';"
+
+    # Agregar cabecera de Referrer-Policy para proteger información sensible en referers
+    Header set Referrer-Policy "no-referrer-when-downgrade"
+</IfModule>
+
+# 4. Prevenir la carga de archivos fuera del sitio y limitar el acceso a archivos específicos
+<FilesMatch "\.(php|html|js|css)$">
+    Require all granted
+</FilesMatch>
+
+<FilesMatch "\.(txt|log|xml)$">
+    Require all denied
+</FilesMatch>
+
+# 5. Prevenir la ejecución de scripts en directorios de carga de archivos (como /uploads)
+<Directory "/path/to/uploads">
+    <FilesMatch "\.(php|cgi|pl|py|jsp|asp|sh|rb)$">
+        Deny from all
+    </FilesMatch>
+</Directory>
